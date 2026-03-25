@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_sub %}Your health information and account details{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <!-- PROFILE CARD -->
+  <div class="card">
+    <div style="text-align:center;padding:8px 0 24px;">
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green-d),var(--green));margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;font-weight:800;">
+        {{ user.name[0].upper() }}
+      </div>
+      <h2 style="font-size:22px;font-weight:800;color:var(--text);">{{ user.name }}</h2>
+      <p style="font-size:14px;color:var(--text3);margin-top:4px;">{{ user.email }}</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+        <span class="sc-badge badge-green">🌾 Telangana Diet</span>
+        <span class="sc-badge badge-blue">{{ profile['diet_type']|title }}</span>
+        <span class="sc-badge badge-purple">{{ profile['activity']|title }} Active</span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:20px;">
+      {% for label, value, icon in [
+          ('Age', profile['age']|string + ' years', '🎂'),
+          ('Gender', profile['gender']|title, '👤'),
+          ('Height', profile['height']|string + ' cm', '📏'),
+          ('Current Weight', profile['weight']|string + ' kg', '⚖️'),
+          ('Target Weight', profile['target_weight']|string + ' kg', '🎯'),
+          ('Diet Type', profile['diet_type']|title, '🥗'),
+          ('Activity Level', profile['activity']|title, '🏃'),
+      ] %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;">
+          {{ icon }} {{ label }}
+        </span>
+        <strong style="font-size:14px;color:var(--text);">{{ value }}</strong>
+      </div>
+      {% endfor %}
+      {% if profile['conditions'] %}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--text2);">🏥 Health Conditions</span>
+        <strong style="font-size:13px;color:var(--text);text-align:right;max-width:60%;">{{ profile['conditions'].replace(',',', ') }}</strong>
+      </div>
+      {% endif %}
+      {% if profile['allergies'] %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+        <span style="font-size:13px;color:var(--text2);">⚠️ Allergies</span>
+        <strong style="font-size:13px;color:var(--red);">{{ profile['allergies'] }}</strong>
+      </div>
+      {% endif %}
+    </div>
+    <a href="{{ url_for('profile_setup') }}" class="btn btn-primary btn-full" style="margin-top:18px;">✏️ Edit Health Data</a>
+  </div>
+
+  <!-- HEALTH METRICS -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card">
+      <div class="card-title"><span>📊</span> Health Metrics</div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="stat-card" data-icon="⚖️" style="padding:16px;">
+          <div class="sc-label">BMI</div>
+          <div class="sc-value" style="font-size:24px;color:{{ bmi_color }};">{{ profile['bmi'] }}</div>
+          <span class="sc-badge {% if bmi_cat == 'Normal' %}badge-green{% elif bmi_cat == 'Underweight' %}badge-blue{% elif bmi_cat == 'Overweight' %}badge-orange{% else %}badge-red{% endif %}">
+            {{ bmi_cat }}
+          </span>
+        </div>
+        <div class="stat-card" data-icon="🔥" style="padding:16px;">
+          <div class="sc-label">Daily Calories</div>
+          <div class="sc-value" style="font-size:24px;">{{ profile['daily_calories'] }}</div>
+          <span class="sc-badge badge-green">kcal/day</span>
+        </div>
+      </div>
+
+      {% set diff = (profile['weight'] - profile['target_weight'])|round(1) %}
+      <div style="margin-top:16px;background:var(--green-pale);border:1px solid #bbf7d0;border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px;">🎯 Your Goal</div>
+        <div style="font-size:14px;color:var(--text2);">
+          {% if diff > 0 %}
+            Lose <strong style="color:var(--red);">{{ diff }} kg</strong> to reach your target weight of {{ profile['target_weight'] }} kg
+          {% elif diff < 0 %}
+            Gain <strong style="color:var(--blue);">{{ (diff * -1)|round(1) }} kg</strong> to reach your target weight of {{ profile['target_weight'] }} kg
+          {% else %}
+            🎉 <strong style="color:var(--green);">Goal achieved!</strong> You're at your target weight!
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>⚡</span> Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a href="{{ url_for('diet_plan') }}"   class="btn btn-primary">🥘 View My Diet Plan</a>
+        <a href="{{ url_for('activity') }}"    class="btn btn-blue">🏃 Log Activity</a>
+        <a href="{{ url_for('progress') }}"    class="btn btn-outline">📊 View Progress</a>
+        <a href="{{ url_for('grocery') }}"     class="btn btn-outline">🛒 Grocery List</a>
+        <a href="{{ url_for('profile_setup') }}" class="btn btn-outline">⚙️ Update Health Data</a>
+        <a href="{{ url_for('logout') }}"      class="btn btn-danger">🚪 Sign Out</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

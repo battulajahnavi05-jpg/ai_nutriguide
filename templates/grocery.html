@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Grocery List{% endblock %}
+{% block page_title %}Grocery List{% endblock %}
+{% block page_sub %}Auto-generated from your weekly diet plan{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <p style="font-size:14px;color:var(--text2);">
+      Based on your <strong>{{ profile['diet_type']|title }}</strong> 7-day Telangana diet plan.
+      Check off items as you shop!
+    </p>
+  </div>
+  <button onclick="clearChecked()" class="btn btn-outline btn-sm">🔄 Reset Checked</button>
+</div>
+
+<div class="grid-2">
+  <div>
+    {% if grains %}
+    <div class="grocery-section">
+      <h4>🌾 Grains & Flours ({{ grains|length }} items)</h4>
+      {% for item, count in grains.items() %}
+      <div class="grocery-item">
+        <input type="checkbox" id="g_{{ loop.index }}" onchange="saveCheck(this)">
+        <label for="g_{{ loop.index }}">{{ item }}</label>
+        <span class="qty">{{ count }}×/week</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if lentils %}
+    <div class="grocery-section">
+      <h4>🫘 Lentils & Legumes ({{ lentils|length }} items)</h4>
+      {% for item, count in lentils.items() %}
+      <div class="grocery-item">
+        <input type="checkbox" id="l_{{ loop.index }}" onchange="saveCheck(this)">
+        <label for="l_{{ loop.index }}">{{ item }}</label>
+        <span class="qty">{{ count }}×/week</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    {% if veggies %}
+    <div class="grocery-section">
+      <h4>🥦 Vegetables & Condiments ({{ veggies|length }} items)</h4>
+      {% for item, count in veggies.items() %}
+      <div class="grocery-item">
+        <input type="checkbox" id="v_{{ loop.index }}" onchange="saveCheck(this)">
+        <label for="v_{{ loop.index }}">{{ item }}</label>
+        <span class="qty">{{ count }}×/week</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if proteins %}
+    <div class="grocery-section">
+      <h4>🍗 Proteins ({{ proteins|length }} items)</h4>
+      {% for item, count in proteins.items() %}
+      <div class="grocery-item">
+        <input type="checkbox" id="p_{{ loop.index }}" onchange="saveCheck(this)">
+        <label for="p_{{ loop.index }}">{{ item }}</label>
+        <span class="qty">{{ count }}×/week</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if others %}
+    <div class="grocery-section">
+      <h4>🧂 Spices & Others ({{ others|length }} items)</h4>
+      {% for item, count in others.items() %}
+      <div class="grocery-item">
+        <input type="checkbox" id="o_{{ loop.index }}" onchange="saveCheck(this)">
+        <label for="o_{{ loop.index }}">{{ item }}</label>
+        <span class="qty">{{ count }}×/week</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:8px;background:var(--green-pale);border:1px solid #bbf7d0;">
+  <div class="card-title"><span>💡</span> Shopping Tips</div>
+  <div class="grid-2">
+    <div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.8;">
+        ✅ Buy fresh Telangana vegetables from local <strong>Rythu Bazaars</strong><br>
+        ✅ Get jowar, ragi and bajra from local <strong>grain stores</strong><br>
+        ✅ Fresh gongura (sorrel) available seasonally — buy extra & freeze<br>
+        ✅ Toor dal and moong dal buy in bulk to save cost
+      </p>
+    </div>
+    <div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.8;">
+        ✅ Use fresh curry leaves and mustard seeds from local market<br>
+        ✅ Country chicken preferred over broiler for better nutrition<br>
+        ✅ Fresh tamarind from Warangal region is best quality<br>
+        ✅ Buy peanuts in bulk — used in many Telangana recipes
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveCheck(cb) {
+  localStorage.setItem('ng_grocery_' + cb.id, cb.checked);
+  const label = document.querySelector('label[for="' + cb.id + '"]');
+  if (label) label.style.textDecoration = cb.checked ? 'line-through' : 'none';
+}
+function clearChecked() {
+  document.querySelectorAll('.grocery-item input[type=checkbox]').forEach(cb => {
+    cb.checked = false;
+    localStorage.removeItem('ng_grocery_' + cb.id);
+    const label = document.querySelector('label[for="' + cb.id + '"]');
+    if (label) label.style.textDecoration = 'none';
+  });
+}
+// Restore saved state
+document.querySelectorAll('.grocery-item input[type=checkbox]').forEach(cb => {
+  const saved = localStorage.getItem('ng_grocery_' + cb.id);
+  if (saved === 'true') { cb.checked = true; saveCheck(cb); }
+});
+</script>
+{% endblock %}

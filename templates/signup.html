@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up – AI NutriGuide</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="brand">
+      <span class="brand-icon">🌿</span>
+      <div class="brand-name">AI <span>NutriGuide</span></div>
+      <div class="brand-sub">Smart Healthy Diet Planner<br>powered by Telangana cuisine</div>
+      <div class="auth-badges">
+        <span class="auth-badge">🌾 Local Foods</span>
+        <span class="auth-badge">🤖 AI Powered</span>
+        <span class="auth-badge">📊 Tracking</span>
+      </div>
+      <ul class="auth-features">
+        <li>Personalised 7-day Telangana meal plans</li>
+        <li>BMI calculator & calorie tracking</li>
+        <li>Activity tracker with calorie burn</li>
+        <li>Weight progress charts</li>
+        <li>Auto grocery list generator</li>
+      </ul>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h2>Create Account</h2>
+      <p class="auth-sub">Join AI NutriGuide and start your health journey today</p>
+
+      {% if error %}
+      <div class="alert alert-error">⚠️ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('signup') }}" data-validate>
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <div class="input-with-icon">
+            <span class="input-icon">👤</span>
+            <input class="form-control" type="text" id="name" name="name"
+                   value="{{ name or '' }}" placeholder="Your full name" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="input-with-icon">
+            <span class="input-icon">📧</span>
+            <input class="form-control" type="email" id="email" name="email"
+                   value="{{ email or '' }}" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input class="form-control" type="password" id="password" name="password"
+                     placeholder="Min 6 characters" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm Password</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                     placeholder="Re-enter password" required>
+            </div>
+          </div>
+        </div>
+        <div class="form-error alert alert-error" style="display:none;"></div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account →</button>
+      </form>
+
+      <div class="divider"><span>or</span></div>
+      <div class="auth-link-row">
+        Already have an account? <a href="{{ url_for('login') }}">Sign In</a>
+      </div>
+      <div class="auth-link-row" style="margin-top:10px;">
+        <a href="{{ url_for('welcome') }}" style="color:var(--text3);">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

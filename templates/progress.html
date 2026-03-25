@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Progress{% endblock %}
+{% block page_title %}My Progress{% endblock %}
+{% block page_sub %}Track your weight journey and health improvements{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="grid-4" style="margin-bottom:24px;">
+  <div class="stat-card" data-icon="⚖️">
+    <div class="sc-label">Current Weight</div>
+    <div class="sc-value">{{ profile['weight'] }}</div>
+    <div class="sc-sub">kg</div>
+    <span class="sc-badge badge-blue">Latest</span>
+  </div>
+  <div class="stat-card" data-icon="🎯">
+    <div class="sc-label">Target Weight</div>
+    <div class="sc-value">{{ profile['target_weight'] }}</div>
+    <div class="sc-sub">
+      {% set diff = (profile['weight'] - profile['target_weight'])|round(1) %}
+      {% if diff > 0 %}{{ diff }} kg to lose{% elif diff < 0 %}{{ (diff * -1)|round(1) }} kg to gain{% else %}🎉 Goal achieved!{% endif %}
+    </div>
+    <span class="sc-badge badge-purple">Goal</span>
+  </div>
+  <div class="stat-card" data-icon="📊">
+    <div class="sc-label">Current BMI</div>
+    <div class="sc-value" style="color:{{ bmi_color }};">{{ profile['bmi'] }}</div>
+    <div class="sc-sub">{{ bmi_cat }}</div>
+    <span class="sc-badge {% if bmi_cat == 'Normal' %}badge-green{% elif bmi_cat == 'Underweight' %}badge-blue{% elif bmi_cat == 'Overweight' %}badge-orange{% else %}badge-red{% endif %}">
+      {{ bmi_cat }}
+    </span>
+  </div>
+  <div class="stat-card" data-icon="📅">
+    <div class="sc-label">Logs Recorded</div>
+    <div class="sc-value">{{ logs|length }}</div>
+    <div class="sc-sub">Weight entries</div>
+    <span class="sc-badge badge-green">Total</span>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+  <!-- LOG WEIGHT FORM -->
+  <div class="card">
+    <div class="card-title"><span>➕</span> Log Today's Weight</div>
+    <form method="POST" action="{{ url_for('progress') }}">
+      <div class="form-group">
+        <label class="form-label">Weight (kg)</label>
+        <div class="input-with-icon">
+          <span class="input-icon">⚖️</span>
+          <input class="form-control" type="number" name="weight" min="20" max="400" step="0.1"
+                 placeholder="e.g. 68.5" required>
+        </div>
+      </div>
+      <div class="alert alert-info" style="font-size:12px;margin-bottom:14px;">
+        💡 Weigh yourself at the same time each day (morning, after waking) for accurate tracking.
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Log Weight ✓</button>
+    </form>
+
+    <!-- BMI SCALE -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">BMI Scale Reference</div>
+      {% for label, range_, color in [('Underweight','< 18.5','#3498db'),('Normal','18.5 – 24.9','#2ecc71'),('Overweight','25.0 – 29.9','#f39c12'),('Obese','≥ 30.0','#e74c3c')] %}
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="width:12px;height:12px;border-radius:50%;background:{{ color }};flex-shrink:0;"></div>
+        <span style="font-size:13px;font-weight:600;flex:1;">{{ label }}</span>
+        <span style="font-size:12px;color:var(--text3);">BMI {{ range_ }}</span>
+        {% if bmi_cat == label %}<span style="font-size:11px;font-weight:700;color:{{ color }};">← You</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- WEIGHT CHART -->
+  <div class="card">
+    <div class="card-title"><span>📉</span> Weight Journey Chart</div>
+    {% if logs|length >= 2 %}
+    <div class="chart-container">
+      <canvas id="weightChart"></canvas>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:40px;">
+      <div class="es-icon">📊</div>
+      <div class="es-title">Not enough data yet</div>
+      <div class="es-sub">Log at least 2 weight entries to see your chart</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- BMI CHART -->
+{% if logs|length >= 2 %}
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-title"><span>📈</span> BMI Progress Over Time</div>
+  <div class="chart-container">
+    <canvas id="bmiChart"></canvas>
+  </div>
+</div>
+{% endif %}
+
+<!-- WEIGHT LOG TABLE -->
+<div class="card">
+  <div class="card-title"><span>📋</span> Complete Weight Log</div>
+  {% if logs %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Weight (kg)</th><th>BMI</th><th>Change</th><th>Status</th></tr></thead>
+      <tbody>
+        {% set logs_list = logs|list %}
+        {% for i in range(logs_list|length - 1, -1, -1) %}
+        {% set log = logs_list[i] %}
+        {% set bmi_val = (log.weight / ((profile['height']/100)**2))|round(1) %}
+        <tr>
+          <td>{{ log.logged_date }}</td>
+          <td><strong>{{ log.weight }} kg</strong></td>
+          <td>{{ bmi_val }}</td>
+          <td>
+            {% if i > 0 %}
+              {% set change = (log.weight - logs_list[i-1].weight)|round(1) %}
+              <span class="{{ 'change-down' if change < 0 else ('change-up' if change > 0 else '') }}" style="font-weight:700;">
+                {{ '▼ ' + (change|abs|string) + ' kg' if change < 0 else ('▲ ' + change|string + ' kg' if change > 0 else '— No change') }}
+              </span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if bmi_val < 18.5 %}<span class="sc-badge badge-blue">Underweight</span>
+            {% elif bmi_val < 25 %}<span class="sc-badge badge-green">Normal</span>
+            {% elif bmi_val < 30 %}<span class="sc-badge badge-orange">Overweight</span>
+            {% else %}<span class="sc-badge badge-red">Obese</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="es-icon">⚖️</div>
+    <div class="es-title">No weight logs yet</div>
+    <div class="es-sub">Start logging your weight to track progress!</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if logs|length >= 2 %}
+const labels  = {{ chart_labels|safe }};
+const weights = {{ chart_weights|safe }};
+const bmis    = {{ chart_bmis|safe }};
+const target  = {{ profile['target_weight'] }};
+
+// Weight Chart
+new Chart(document.getElementById('weightChart'), {
+  type: 'line',
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Weight (kg)', data: weights, borderColor: '#2ecc71',
+        backgroundColor: 'rgba(46,204,113,.1)', borderWidth: 2.5,
+        pointBackgroundColor: '#1a7a3e', pointRadius: 5, tension: 0.4, fill: true
+      },
+      {
+        label: 'Target (kg)', data: Array(labels.length).fill(target),
+        borderColor: '#e74c3c', borderWidth: 1.5, borderDash: [6,4],
+        pointRadius: 0, fill: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position:'top', labels:{ font:{ family:'Sora', size:12 } } } },
+    scales: {
+      y: { grid:{ color:'rgba(0,0,0,.05)' }, ticks:{ font:{ family:'Sora' } } },
+      x: { grid:{ display:false }, ticks:{ font:{ family:'Sora' }, maxTicksLimit:8 } }
+    }
+  }
+});
+
+// BMI Chart
+new Chart(document.getElementById('bmiChart'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'BMI', data: bmis,
+      backgroundColor: bmis.map(b => b < 18.5 ? 'rgba(52,152,219,.7)' : b < 25 ? 'rgba(46,204,113,.7)' : b < 30 ? 'rgba(243,156,18,.7)' : 'rgba(231,76,60,.7)'),
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display:false } },
+    scales: {
+      y: {
+        grid: { color:'rgba(0,0,0,.05)' },
+        ticks: { font:{ family:'Sora' } },
+        suggestedMin: 15, suggestedMax: 35,
+        annotations: {}
+      },
+      x: { grid:{ display:false }, ticks:{ font:{ family:'Sora' }, maxTicksLimit:8 } }
+    }
+  }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}AI NutriGuide{% endblock %} – Smart Diet Planner</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-text">
+        <div class="app-name">AI NutriGuide</div>
+        <div class="app-sub">Smart Diet Planner</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Main Menu</div>
+      <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a href="{{ url_for('diet_plan') }}" class="nav-link {% if request.endpoint=='diet_plan' %}active{% endif %}">
+        <span class="nav-icon">🥘</span> Diet Plan
+      </a>
+      <a href="{{ url_for('activity') }}" class="nav-link {% if request.endpoint=='activity' %}active{% endif %}">
+        <span class="nav-icon">🏃</span> Activity Tracker
+      </a>
+      <a href="{{ url_for('progress') }}" class="nav-link {% if request.endpoint=='progress' %}active{% endif %}">
+        <span class="nav-icon">📊</span> Progress
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">More</div>
+      <a href="{{ url_for('grocery') }}" class="nav-link {% if request.endpoint=='grocery' %}active{% endif %}">
+        <span class="nav-icon">🛒</span> Grocery List
+      </a>
+      <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint=='profile' %}active{% endif %}">
+        <span class="nav-icon">👤</span> My Profile
+      </a>
+      <a href="{{ url_for('profile_setup') }}" class="nav-link {% if request.endpoint=='profile_setup' %}active{% endif %}">
+        <span class="nav-icon">⚙️</span> Edit Health Data
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="avatar">{{ session.get('user_name','U')[0].upper() }}</div>
+        <div class="user-info">
+          <div class="uname">{{ session.get('user_name','User') }}</div>
+          <div class="urole">Member</div>
+        </div>
+      </div>
+      <a href="{{ url_for('logout') }}" class="logout-btn">🚪 Sign Out</a>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="hamburger" id="hamburger">☰</button>
+        <div class="topbar-left">
+          <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+          <p>{% block page_sub %}{% endblock %}</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-badge">🌾 Telangana Foods</span>
+        <span class="topbar-badge" style="background:var(--blue-pale);color:var(--blue);border-color:#bfdbfe;">
+          👤 {{ session.get('user_name','') }}
+        </span>
+      </div>
+    </header>
+
+    <main class="page-body">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

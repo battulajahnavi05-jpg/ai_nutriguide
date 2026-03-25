@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI NutriGuide – Smart Healthy Diet Planner</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="welcome-page">
+  <div class="welcome-content">
+    <span class="welcome-icon">🌿</span>
+    <h1 class="welcome-title">AI <span>NutriGuide</span></h1>
+    <p class="welcome-sub">
+      Your intelligent Telangana diet companion.<br>
+      Personalised meal plans · BMI tracking · Activity monitoring<br>
+      Powered by authentic Telangana cuisine for real results.
+    </p>
+    <div class="auth-badges" style="margin-bottom:32px;">
+      <span class="auth-badge">🌾 Telangana Foods</span>
+      <span class="auth-badge">🤖 AI Powered</span>
+      <span class="auth-badge">📊 BMI & Calorie Tracker</span>
+      <span class="auth-badge">📴 Progress Charts</span>
+    </div>
+    <div class="welcome-ctas">
+      <a href="{{ url_for('signup') }}" class="btn btn-welcome-primary">Get Started Free 🚀</a>
+      <a href="{{ url_for('login') }}"  class="btn btn-welcome-secondary">Sign In →</a>
+    </div>
+
+    <div class="welcome-features">
+      <div class="wf-card">
+        <div class="wf-icon">🥘</div>
+        <div class="wf-title">Personalised Diet Plan</div>
+        <div class="wf-sub">7-day Telangana meal plans tailored to your health</div>
+      </div>
+      <div class="wf-card">
+        <div class="wf-icon">📊</div>
+        <div class="wf-title">BMI & Calorie Tracker</div>
+        <div class="wf-sub">Real-time health metrics and progress charts</div>
+      </div>
+      <div class="wf-card">
+        <div class="wf-icon">🏃</div>
+        <div class="wf-title">Activity Monitor</div>
+        <div class="wf-sub">Track workouts and calories burned daily</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

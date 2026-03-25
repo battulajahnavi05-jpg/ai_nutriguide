@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Welcome back, {{ user_name }}! Here's your health summary.{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<div class="hero-banner">
+  <h2>Good {{ 'Morning' if now.hour < 12 else ('Afternoon' if now.hour < 17 else 'Evening') }}, {{ user_name }}! 👋</h2>
+  <p>Here's your personalised health overview for today, {{ now.strftime('%A, %d %B %Y') }}</p>
+  <div class="hero-metrics">
+    <div class="hero-metric">
+      <div class="hm-val">{{ profile['bmi'] }}</div>
+      <div class="hm-label">Your BMI</div>
+      <span class="hm-badge" style="background:rgba(255,255,255,.2);color:#fff;">{{ bmi_cat }}</span>
+    </div>
+    <div class="hero-metric">
+      <div class="hm-val">{{ profile['daily_calories'] }}</div>
+      <div class="hm-label">Daily Calories</div>
+      <span class="hm-badge" style="background:rgba(255,255,255,.2);color:#fff;">kcal/day</span>
+    </div>
+    <div class="hero-metric">
+      <div class="hm-val">{{ profile['weight'] }}</div>
+      <div class="hm-label">Current Weight</div>
+      <span class="hm-badge" style="background:rgba(255,255,255,.2);color:#fff;">kg</span>
+    </div>
+    <div class="hero-metric">
+      <div class="hm-val">{{ total_burned }}</div>
+      <div class="hm-label">Burned Today</div>
+      <span class="hm-badge" style="background:rgba(255,255,255,.2);color:#fff;">kcal</span>
+    </div>
+  </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="grid-4" style="margin-bottom:24px;">
+  <div class="stat-card" data-icon="⚖️">
+    <div class="sc-label">BMI Score</div>
+    <div class="sc-value" style="color:{{ bmi_color }};">{{ profile['bmi'] }}</div>
+    <div class="sc-sub">{{ profile['height'] }}cm · {{ profile['weight'] }}kg</div>
+    <span class="sc-badge {% if bmi_cat == 'Normal' %}badge-green{% elif bmi_cat == 'Underweight' %}badge-blue{% elif bmi_cat == 'Overweight' %}badge-orange{% else %}badge-red{% endif %}">
+      {{ bmi_cat }}
+    </span>
+  </div>
+  <div class="stat-card" data-icon="🔥">
+    <div class="sc-label">Daily Calories</div>
+    <div class="sc-value">{{ profile['daily_calories'] }}</div>
+    <div class="sc-sub">Recommended intake</div>
+    <span class="sc-badge badge-green">kcal/day</span>
+  </div>
+  <div class="stat-card" data-icon="🎯">
+    <div class="sc-label">Goal Weight</div>
+    <div class="sc-value">{{ profile['target_weight'] }}</div>
+    <div class="sc-sub">
+      {% set diff = (profile['weight'] - profile['target_weight'])|round(1) %}
+      {% if diff > 0 %}{{ diff }} kg to lose{% elif diff < 0 %}{{ (diff * -1)|round(1) }} kg to gain{% else %}Goal reached!{% endif %}
+    </div>
+    <span class="sc-badge badge-purple">Target</span>
+  </div>
+  <div class="stat-card" data-icon="🏃">
+    <div class="sc-label">Burned Today</div>
+    <div class="sc-value">{{ total_burned }}</div>
+    <div class="sc-sub">From activities logged</div>
+    <span class="sc-badge badge-blue">kcal</span>
+  </div>
+</div>
+
+<!-- TODAY'S MEALS + PROGRESS -->
+<div class="grid-2" style="margin-bottom:24px;">
+  <!-- TODAY'S MEALS -->
+  <div class="card">
+    <div class="card-title"><span>🍽️</span> Today's Meals — {{ today_meals.day }}</div>
+    {% for meal_type, meal_key in [("☕ Breakfast","breakfast"),("🌞 Lunch","lunch"),("🌙 Dinner","dinner")] %}
+    {% set meal = today_meals[meal_key] %}
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="width:52px;height:52px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">
+        {{ meal.emoji }}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.5px;">{{ meal_type }}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:2px;">{{ meal.name }}</div>
+        <div style="font-size:12px;color:var(--text3);">🔥 {{ meal.cal }} kcal · P:{{ meal.protein }}g · C:{{ meal.carbs }}g · F:{{ meal.fat }}g</div>
+      </div>
+    </div>
+    {% endfor %}
+    <a href="{{ url_for('diet_plan') }}" class="btn btn-outline btn-full btn-sm" style="margin-top:14px;">View Full 7-Day Plan →</a>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="card">
+    <div class="card-title"><span>📊</span> Today's Progress</div>
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>Calorie Balance</span>
+        <span>{{ total_burned }} / {{ profile['daily_calories'] }} kcal</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill prog-green" data-width="{{ [((total_burned / profile['daily_calories']) * 100)|int, 100]|min }}" style="width:0%"></div></div>
+    </div>
+
+    {% set today_total_meals = today_meals.breakfast.cal + today_meals.lunch.cal + today_meals.dinner.cal %}
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>Meal Calories</span>
+        <span>{{ today_total_meals }} / {{ profile['daily_calories'] }} kcal</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill prog-blue" data-width="{{ [((today_total_meals / profile['daily_calories']) * 100)|int, 100]|min }}" style="width:0%"></div></div>
+    </div>
+
+    {% set goal_diff = ((profile['weight'] - profile['target_weight']))|abs %}
+    {% set progress_pct = 10 if goal_diff > 0 else 100 %}
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>Weight Goal</span>
+        <span>{{ profile['weight'] }} → {{ profile['target_weight'] }} kg</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill prog-orange" data-width="{{ progress_pct }}" style="width:0%"></div></div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;">
+      <a href="{{ url_for('activity') }}" class="btn btn-blue btn-sm" style="justify-content:center;">🏃 Log Activity</a>
+      <a href="{{ url_for('progress') }}" class="btn btn-outline btn-sm" style="justify-content:center;">⚖️ Log Weight</a>
+      <a href="{{ url_for('grocery') }}" class="btn btn-outline btn-sm" style="justify-content:center;">🛒 Grocery List</a>
+      <a href="{{ url_for('profile_setup') }}" class="btn btn-outline btn-sm" style="justify-content:center;">⚙️ Edit Profile</a>
+    </div>
+  </div>
+</div>
+
+<!-- WEIGHT HISTORY -->
+{% if weight_logs %}
+<div class="card">
+  <div class="card-title"><span>📉</span> Recent Weight Log</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Weight</th><th>BMI</th><th>Change</th></tr></thead>
+      <tbody>
+        {% for i, log in enumerate(weight_logs) %}
+        <tr>
+          <td>{{ log.logged_date }}</td>
+          <td><strong>{{ log.weight }} kg</strong></td>
+          <td>{{ (log.weight / ((profile['height']/100)**2))|round(1) }}</td>
+          <td>
+            {% if i < weight_logs|length - 1 %}
+              {% set change = (log.weight - weight_logs[i+1].weight)|round(1) %}
+              <span class="{{ 'change-down' if change < 0 else ('change-up' if change > 0 else '') }}">
+                {{ '▼ ' + (change|abs|string) if change < 0 else ('▲ ' + change|string if change > 0 else '—') }}
+              </span>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <a href="{{ url_for('progress') }}" class="btn btn-outline btn-sm" style="margin-top:14px;">View Full Progress →</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const now = new Date();
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Diet Plan{% endblock %}
+{% block page_title %}My Diet Plan{% endblock %}
+{% block page_sub %}Your personalised 7-day Telangana meal plan{% endblock %}
+
+{% block content %}
+<!-- PLAN INFO BANNER -->
+<div style="background:linear-gradient(135deg,var(--green-d),var(--blue));border-radius:var(--radius);padding:24px;margin-bottom:24px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+  <div>
+    <h3 style="font-size:18px;font-weight:800;margin-bottom:4px;">🌾 Your Telangana Diet Plan</h3>
+    <p style="font-size:13px;opacity:.85;">
+      {{ profile['diet_type']|title }} plan · {{ profile['daily_calories'] }} kcal/day target ·
+      BMI {{ profile['bmi'] }} ({{ bmi_cat }})
+    </p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <span style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;">
+      🥗 {{ profile['diet_type']|title }}
+    </span>
+    <span style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;">
+      🔥 {{ profile['daily_calories'] }} kcal
+    </span>
+  </div>
+</div>
+
+<!-- DAY TABS -->
+<div class="day-tabs">
+  {% for day_plan in plan %}
+  <button class="day-tab {% if loop.index0 == 0 %}active{% endif %}" data-day="{{ loop.index0 }}">
+    {{ day_plan.day[:3] }}
+  </button>
+  {% endfor %}
+</div>
+
+<!-- MEAL PANELS -->
+{% for day_plan in plan %}
+<div id="day-{{ loop.index0 }}" class="day-panel" style="display:{% if loop.index0 == 0 %}grid{% else %}none{% endif %};grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+
+  {% for meal_type, meal_key, meal_icon in [('Breakfast','breakfast','☕'),('Lunch','lunch','🌞'),('Dinner','dinner','🌙')] %}
+  {% set meal = day_plan[meal_key] %}
+  <div class="meal-card">
+    <div class="mc-img">
+      {{ meal.emoji }}
+      <span class="mc-type-badge">{{ meal_icon }} {{ meal_type }}</span>
+    </div>
+    <div class="mc-body">
+      <div class="mc-name">{{ meal.name }}</div>
+      <div class="mc-cal">🔥 {{ meal.cal }} kcal per serving</div>
+
+      <div class="nut-row">
+        <div class="nut-box"><div class="nb-val">{{ meal.protein }}g</div><div class="nb-label">Protein</div></div>
+        <div class="nut-box"><div class="nb-val">{{ meal.carbs }}g</div><div class="nb-label">Carbs</div></div>
+        <div class="nut-box"><div class="nb-val">{{ meal.fat }}g</div><div class="nb-label">Fat</div></div>
+      </div>
+
+      <div class="ing-tags">
+        {% for ing in meal.ingredients %}
+        <span class="ing-tag">🌿 {{ ing }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="why-box">
+        <h5>🤖 Why this meal?</h5>
+        <p>{{ meal.why }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endfor %}
+
+<!-- NUTRITION SUMMARY -->
+<div class="card" style="margin-top:24px;">
+  <div class="card-title"><span>📊</span> Weekly Nutrition Summary</div>
+  <div class="grid-4">
+    {% set total_cal = namespace(v=0) %}
+    {% for d in plan %}
+      {% set total_cal.v = total_cal.v + d.breakfast.cal + d.lunch.cal + d.dinner.cal %}
+    {% endfor %}
+    <div class="stat-card" data-icon="🔥">
+      <div class="sc-label">Avg Daily Calories</div>
+      <div class="sc-value">{{ (total_cal.v / 7)|int }}</div>
+      <div class="sc-sub">kcal per day</div>
+    </div>
+    <div class="stat-card" data-icon="🥩">
+      <div class="sc-label">Diet Style</div>
+      <div class="sc-value" style="font-size:18px;">{{ profile['diet_type']|title }}</div>
+      <div class="sc-sub">Telangana cuisine</div>
+    </div>
+    <div class="stat-card" data-icon="🌾">
+      <div class="sc-label">Meals Per Week</div>
+      <div class="sc-value">21</div>
+      <div class="sc-sub">7 days × 3 meals</div>
+    </div>
+    <div class="stat-card" data-icon="📅">
+      <div class="sc-label">Plan Duration</div>
+      <div class="sc-value" style="font-size:18px;">7 Days</div>
+      <div class="sc-sub">Full week covered</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

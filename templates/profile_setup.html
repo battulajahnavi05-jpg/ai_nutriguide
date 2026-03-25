@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Profile Setup – AI NutriGuide</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background:var(--bg);">
+<div class="setup-page">
+  <div class="setup-container">
+    <div class="setup-header">
+      <a href="{{ url_for('dashboard') if profile else url_for('welcome') }}"
+         style="color:var(--text3);text-decoration:none;font-size:13px;">← Back</a>
+      <h1 style="margin-top:8px;">🏥 Health Profile Setup</h1>
+      <p>Help AI NutriGuide personalise your Telangana diet plan</p>
+    </div>
+    <div class="setup-card">
+      <div class="step-indicator">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+
+      <form method="POST" action="{{ url_for('profile_setup') }}">
+
+        <!-- PERSONAL INFO -->
+        <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px;">📋 Personal Information</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:20px;">Enter your basic details</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="age">Age (years)</label>
+            <input class="form-control" type="number" id="age" name="age" min="10" max="100"
+                   value="{{ profile.age if profile else '' }}" placeholder="e.g. 28" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select class="form-control" name="gender" required>
+              <option value="male"   {% if profile and profile.gender=='male'   %}selected{% endif %}>Male</option>
+              <option value="female" {% if profile and profile.gender=='female' %}selected{% endif %}>Female</option>
+              <option value="other"  {% if profile and profile.gender=='other'  %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="height">Height (cm)</label>
+            <input class="form-control" type="number" id="height" name="height" min="100" max="250" step="0.1"
+                   value="{{ profile.height if profile else '' }}" placeholder="e.g. 165" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="weight">Current Weight (kg)</label>
+            <input class="form-control" type="number" id="weight" name="weight" min="30" max="300" step="0.1"
+                   value="{{ profile.weight if profile else '' }}" placeholder="e.g. 68" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="target_weight">Target Weight (kg)</label>
+          <input class="form-control" type="number" id="target_weight" name="target_weight" min="30" max="300" step="0.1"
+                 value="{{ profile.target_weight if profile else '' }}" placeholder="e.g. 60" required>
+          <div id="bmi-preview" style="font-size:13px;color:var(--text2);margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;"></div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- ACTIVITY LEVEL -->
+        <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px;">🏃 Activity Level</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">How active are you daily?</p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          {% for val, label, icon, desc in [
+              ('sedentary','Sedentary','🪑','Office work, little movement'),
+              ('light','Lightly Active','🚶','Light exercise 1-3 days/week'),
+              ('moderate','Moderately Active','🏃','Exercise 3-5 days/week'),
+              ('very','Very Active','💪','Hard exercise 6-7 days/week'),
+              ('extra','Extra Active','🏋️','Very hard exercise, physical job')
+          ] %}
+          <label class="radio-card" style="display:flex;align-items:center;gap:14px;text-align:left;padding:14px 16px;">
+            <input type="radio" name="activity" value="{{ val }}"
+                   {% if (profile and profile.activity==val) or (not profile and val=='moderate') %}checked{% endif %}>
+            <span style="font-size:26px;">{{ icon }}</span>
+            <div>
+              <div class="rc-label" style="font-size:14px;">{{ label }}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">{{ desc }}</div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- DIETARY PREFERENCE -->
+        <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px;">🥗 Dietary Preference</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Select your eating style</p>
+
+        <div class="radio-grid" style="margin-bottom:20px;">
+          {% for val, label, icon in [('veg','Vegetarian','🥗'),('nonveg','Non-Vegetarian','🍗'),('vegan','Vegan','🌱'),('jain','Jain','🙏')] %}
+          <label class="radio-card">
+            <input type="radio" name="diet_type" value="{{ val }}"
+                   {% if (profile and profile.diet_type==val) or (not profile and val=='veg') %}checked{% endif %}>
+            <span class="rc-icon">{{ icon }}</span>
+            <span class="rc-label">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- HEALTH CONDITIONS -->
+        <h3 style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px;">🏥 Health Conditions</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Select any you have (optional)</p>
+
+        <div class="check-grid" style="margin-bottom:20px;">
+          {% set conds = (profile.conditions.split(',') if profile and profile.conditions else []) %}
+          {% for val, label, icon in [
+              ('diabetes','Diabetes','🩸'),('bp','High Blood Pressure','❤️'),
+              ('thyroid','Thyroid','🦋'),('cholesterol','High Cholesterol','🫀'),
+              ('pcod','PCOD','⚕️'),('kidney','Kidney Issues','🫘'),
+              ('heart','Heart Disease','💗'),('none','None of the above','✅')
+          ] %}
+          <label class="check-item">
+            <input type="checkbox" name="conditions" value="{{ val }}"
+                   {% if val in conds %}checked{% endif %}>
+            <span>{{ icon }}</span>
+            <span style="font-size:12px;font-weight:600;">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+
+        <!-- ALLERGIES -->
+        <div class="form-group">
+          <label class="form-label" for="allergies">Food Allergies (optional)</label>
+          <input class="form-control" type="text" id="allergies" name="allergies"
+                 value="{{ profile.allergies if profile else '' }}"
+                 placeholder="e.g. Peanuts, Milk, Wheat">
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;">Separate multiple allergies with commas</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:8px;">
+          💾 Save & Generate My Diet Plan →
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

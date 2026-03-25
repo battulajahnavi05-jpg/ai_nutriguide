@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Activity Tracker{% endblock %}
+{% block page_title %}Activity Tracker{% endblock %}
+{% block page_sub %}Log your daily activities and track calories burned{% endblock %}
+
+{% block content %}
+<!-- STATS ROW -->
+<div class="grid-4" style="margin-bottom:24px;">
+  <div class="stat-card" data-icon="🔥">
+    <div class="sc-label">Burned Today</div>
+    <div class="sc-value">{{ total_burned }}</div>
+    <div class="sc-sub">kcal burned</div>
+    <span class="sc-badge badge-orange">Today</span>
+  </div>
+  <div class="stat-card" data-icon="⏱️">
+    <div class="sc-label">Active Minutes</div>
+    <div class="sc-value">{{ total_mins }}</div>
+    <div class="sc-sub">Goal: 30 min/day</div>
+    <span class="sc-badge {% if total_mins >= 30 %}badge-green{% else %}badge-blue{% endif %}">
+      {{ '✓ Goal Met' if total_mins >= 30 else (total_mins|string + ' min') }}
+    </span>
+  </div>
+  <div class="stat-card" data-icon="👟">
+    <div class="sc-label">Steps Today</div>
+    <div class="sc-value">{{ '{:,}'.format(total_steps) }}</div>
+    <div class="sc-sub">Goal: 8,000 steps</div>
+    <span class="sc-badge {% if total_steps >= 8000 %}badge-green{% else %}badge-blue{% endif %}">
+      {{ '✓ Goal Met' if total_steps >= 8000 else 'In Progress' }}
+    </span>
+  </div>
+  <div class="stat-card" data-icon="📋">
+    <div class="sc-label">Activities Logged</div>
+    <div class="sc-value">{{ today_acts|length }}</div>
+    <div class="sc-sub">Today</div>
+    <span class="sc-badge badge-purple">Sessions</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- LOG FORM -->
+  <div class="card">
+    <div class="card-title"><span>➕</span> Log New Activity</div>
+    <form method="POST" action="{{ url_for('activity') }}">
+      <div class="form-group">
+        <label class="form-label">Activity Type</label>
+        <select class="form-control" name="activity_type" required>
+          {% for val, label, icon in [
+            ('walking','Walking','🚶'),('running','Running / Jogging','🏃'),
+            ('cycling','Cycling','🚴'),('gym','Gym / Weight Training','💪'),
+            ('yoga','Yoga / Meditation','🧘'),('swimming','Swimming','🏊'),
+            ('work','Physical Work','💼'),('dance','Dance','💃'),('other','Other','⚡')
+          ] %}
+          <option value="{{ val }}">{{ icon }} {{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Duration (minutes)</label>
+          <input class="form-control" type="number" name="duration" min="1" max="480" placeholder="e.g. 30" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Steps (optional)</label>
+          <input class="form-control" type="number" name="steps" min="0" max="100000" placeholder="e.g. 3000">
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-bottom:14px;font-size:12px;">
+        💡 Calorie burn is estimated based on activity type and duration automatically.
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Log Activity ✓</button>
+    </form>
+  </div>
+
+  <!-- TODAY'S ACTIVITIES -->
+  <div class="card">
+    <div class="card-title"><span>📅</span> Today's Activities</div>
+    {% if today_acts %}
+      {% set icon_map = {'walking':'🚶','running':'🏃','cycling':'🚴','gym':'💪','yoga':'🧘','swimming':'🏊','work':'💼','dance':'💃','other':'⚡'} %}
+      {% set color_map = {'walking':'walk','running':'walk','cycling':'walk','gym':'gym','yoga':'yoga','swimming':'water','work':'work','dance':'yoga','other':'walk'} %}
+      {% for act in today_acts %}
+      <div class="act-item">
+        <div class="act-icon {{ color_map.get(act.activity_type,'walk') }}">
+          {{ icon_map.get(act.activity_type,'⚡') }}
+        </div>
+        <div class="act-info">
+          <div class="act-name">{{ act.activity_type|title }}</div>
+          <div class="act-meta">{{ act.duration_mins }} min
+            {% if act.steps > 0 %} · {{ '{:,}'.format(act.steps) }} steps{% endif %}
+            · {{ act.activity_date }}
+          </div>
+        </div>
+        <div class="act-cal">🔥 {{ act.calories_burned }} kcal</div>
+        <button class="btn btn-danger btn-sm btn-delete-act" data-id="{{ act.id }}" title="Delete">🗑️</button>
+      </div>
+      {% endfor %}
+
+      <!-- PROGRESS BAR -->
+      <div class="prog-wrap" style="margin-top:14px;">
+        <div class="prog-label">
+          <span>Activity Goal (30 min)</span>
+          <span>{{ [total_mins, 30]|min }} / 30 min</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill prog-green" data-width="{{ [((total_mins / 30) * 100)|int, 100]|min }}" style="width:0%"></div></div>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="es-icon">🏃</div>
+        <div class="es-title">No activities logged today</div>
+        <div class="es-sub">Use the form to log your first activity!</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- RECENT HISTORY -->
+{% if all_acts %}
+<div class="card" style="margin-top:24px;">
+  <div class="card-title"><span>📜</span> Activity History (Last 20)</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Activity</th><th>Duration</th><th>Steps</th><th>Calories Burned</th></tr>
+      </thead>
+      <tbody>
+        {% set icon_map = {'walking':'🚶','running':'🏃','cycling':'🚴','gym':'💪','yoga':'🧘','swimming':'🏊','work':'💼','dance':'💃','other':'⚡'} %}
+        {% for act in all_acts %}
+        <tr>
+          <td>{{ act.activity_date }}</td>
+          <td>{{ icon_map.get(act.activity_type,'⚡') }} {{ act.activity_type|title }}</td>
+          <td>{{ act.duration_mins }} min</td>
+          <td>{{ '{:,}'.format(act.steps) if act.steps else '—' }}</td>
+          <td><strong style="color:var(--green);">🔥 {{ act.calories_burned }} kcal</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
